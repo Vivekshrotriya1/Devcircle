@@ -1,13 +1,13 @@
  - Create a repository
  - Initialize the repository
  - node_modules, package.json, package-lock.json
- - Install express 
+ - Install express
  - Create a server
  - Listen to port 7777
  - Write request handlers for /test , /hello
  - Install nodemon and update scripts inside package.json
  - What are dependencies
- - What is the use of "-g" while npm install 
+ - What is the use of "-g" while npm install
  - Difference between caret and tilde  ( ^ vs ~ )
 
  - initialize git
@@ -75,16 +75,17 @@
  - Create login API
  - Compare passwords and throw errors if email or password is invalid
 
+
  - install cookie-parser
  - just send a dummy cookie to user
  - create GET /profile APi and check if you get the cookie back
- - install jsonwebtoken 
+ - install jsonwebtoken
  - IN login API, after email and password validation, create e JWT token and send it to user in cookies
  - read the cookies inside your profile API and find the logged in user
  - userAuth Middleware
  - Add the userAuth middle ware in profile API and a new sendConnectionRequest API
  - Set the expiry of JWT token and cookies to 7 days
- - Create userSchema method to getJWT() 
+ - Create userSchema method to getJWT()
  - Create UserSchema method to comparepassword(passwordInputByUser)
 
  - Explore tinder APIs
@@ -109,11 +110,11 @@
  - Why do we need index in DB?
  - What is the advantages and disadvantage of creating?
  - Read this arcticle about compond indexes - https://www.mongodb.com/docs/manual/core/indexes/index-types/index-compound/
- - ALWAYS THINK ABOUT CORNER CASES 
+ - ALWAYS THINK ABOUT CORNER CASES
 
 
  - Write code with proper validations for POST /request/review/:status/:requestId
- - Thought process - POST vs GET 
+ - Thought process - POST vs GET
  - Read about ref and populate https://mongoosejs.com/docs/populate.html
  - Create GET /user/requests/received with all the checks
  - Create GET GET /user/connections
@@ -124,7 +125,7 @@
 
 
 
-NOTES: 
+NOTES:
 
  /feed?page=1&limit=10 => 1-10 => .skip(0) & .limit(10)
 
@@ -136,7 +137,7 @@ NOTES:
 
 skip = (page-1)*limit;
 
- 
+
 
 
 

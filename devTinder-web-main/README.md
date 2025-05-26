@@ -10,6 +10,7 @@
 - Create BrowserRouter > Routes > Route=/ Body > RouteChildren
 - Create an Outlet in your Body Component
 - Create a footer
+
 - Create a Login Page
 - Install axios
 - CORS - install cors in backend => add middleware to with configurations: orgin, credentials: true
@@ -19,7 +20,7 @@
 - Add redux devtools in chrome
 - Login and see if your data is coming properly in the store
 - NavBar should update as soon as user logs in
-- Refactor our code to add constants file + create a components folder 
+- Refactor our code to add constants file + create a components folder
 - You should not be access other routes without login
 - If token is not present, redirect user to login page
 - Logout Feature
@@ -30,12 +31,15 @@
 - New Page - See all my connections
 - New Page - See all my Conenction REquests
 - Feature - Accept/Reject connection request
-- Send/Ignore the user card from the feed 
-- Signup New User 
+- Send/Ignore the user card from the feed
+- Signup New User
 - E2E testing
 
 
-Body 
+
+
+
+Body
     NavBar
     Route=/  => Feed
     Route=/login  => Login
@@ -46,13 +50,13 @@ Body
 
     # Deployment
 
-    - Signup on AWS 
+    - Signup on AWS
     - Launch instance
     - chmod 400 <secret>.pem
     - ssh -i "devTinder-secret.pem" ubuntu@ec2-43-204-96-49.ap-south-1.compute.amazonaws.com
     - Install Node version 16.17.0
     - Git clone
-    - Frontend    
+    - Frontend
         - npm install  -> dependencies install
         - npm run build
         - sudo apt update
@@ -75,17 +79,17 @@ Body
 
 
 
-# Ngxinx config: 
+# Ngxinx config:
 
         Frontend = http://43.204.96.49/
         Backend = http://43.204.96.49:7777/
-    
+
         Domain name = devtinder.com => 43.204.96.49
 
         Frontend = devtinder.com
         Backend = devtinder.com:7777 => devtinder.com/api
 
-        nginx config : 
+        nginx config :
 
         server_name 43.204.96.49;
 
@@ -106,7 +110,7 @@ Body
     - change the nameservers on godaddy and point it to cloudflare
     - wait for sometime till your nameservers are updated ~15 minutes
     - DNS record: A devtinder.in 43.204.96.49
-    - Enable SSL for website 
+    - Enable SSL for website
 
 
 # Sending Emails via SES
@@ -116,7 +120,7 @@ Body
     - Amazon SES: Create an Identity
     - Verify your domain name
     - Verify an email address identity
-    - Install AWS SDK - v3 
+    - Install AWS SDK - v3
     - Code Example https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/javascriptv3/example_code/ses#code-examples
     - Setup SesClient
     - Access Credentials should be created in IAm under SecurityCredentials Tab
@@ -140,7 +144,7 @@ Body
 
 
 # Razorpay Payment Gateway Inegration
-    - Sign up on Razorpay & complete KYC 
+    - Sign up on Razorpay & complete KYC
     - Cerated a UI for premium page
     - Creating an API for create order in backend
     - added my key and secret in env file
