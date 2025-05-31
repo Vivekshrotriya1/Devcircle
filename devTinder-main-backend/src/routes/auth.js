@@ -5,7 +5,7 @@ const { validateSignUpData } = require("../utils/validation");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 
-authRouter.post("/signup", async (req, res) => {  
+authRouter.post("/signup", async (req, res) => {
   try {
     // Validation of data
     validateSignUpData(req);
@@ -29,6 +29,9 @@ authRouter.post("/signup", async (req, res) => {
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
+      httpOnly: true,
+      sameSite: "none", // required for cross-site cookies
+      secure: true,  // required for cross-site cookies
     });
 
     res.json({ message: "User Added successfully!", data: savedUser });
@@ -52,6 +55,9 @@ authRouter.post("/login", async (req, res) => {
 
       res.cookie("token", token, {
         expires: new Date(Date.now() + 8 * 3600000),
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
       });
       res.send(user);
     } else {
@@ -65,6 +71,9 @@ authRouter.post("/login", async (req, res) => {
 authRouter.post("/logout", async (req, res) => {
   res.cookie("token", null, {
     expires: new Date(Date.now()),
+     httpOnly: true,
+    sameSite: "none", // required for cross-site cookies
+    secure: true,     // required for HTTPS
   });
   res.send("Logout Successful!!");
 });
