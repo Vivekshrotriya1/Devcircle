@@ -14,6 +14,10 @@ const Chat = () => {
   const userId = user?._id;
   const socketRef = useRef(null);
 
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
   const fetchChatMessages = async () => {
     const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
       withCredentials: true,
