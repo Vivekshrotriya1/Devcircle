@@ -11,6 +11,7 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const user = useSelector((store) => store.user);
   const userId = user?._id;
+   const socketRef = useRef(null);//change
 
   const fetchChatMessages = async () => {
     const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
@@ -38,6 +39,7 @@ const Chat = () => {
       return;
     }
     const socket = createSocketConnection();
+    socketRef.current = socket; //change
     // As soon as the page loaded, the socket connection is made and joinChat event is emitted
     socket.emit("joinChat", {
       firstName: user.firstName,
@@ -53,10 +55,11 @@ const Chat = () => {
     return () => {
       socket.disconnect();
     };
-  }, [userId, targetUserId]);
+  }, [userId, targetUserId, user.firstName]);
 
   const sendMessage = () => {
-    const socket = createSocketConnection();
+    const socket = socketRef.current;
+    if (!newMessage.trim()) return;
     socket.emit("sendMessage", {
       firstName: user.firstName,
       lastName: user.lastName,
