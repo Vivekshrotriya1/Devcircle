@@ -169,7 +169,7 @@ Body
     - createSocketConnection
     - Listen to events
     - Homework:  improve the UI
-    - Homework: Fix Security Bug - auth in web ockets
+    - Homework: Fix Security Bug - auth in web Sockets
     - Homework: Fix bug - If I'm not fried, then I should not be able to send message
     - Homework: feat: Show Green Symbol when online???? - [last Seen 2 hours ago]
     - Homework: Limit messages when fetching from DB
