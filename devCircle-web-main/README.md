@@ -1,4 +1,4 @@
-# DevTinder
+# DevCircle
 
 - Create a Vite + React application
 - Remove unecessary code and create a Hello World app
@@ -53,7 +53,7 @@ Body
     - Signup on AWS
     - Launch instance
     - chmod 400 <secret>.pem
-    - ssh -i "devTinder-secret.pem" ubuntu@ec2-43-204-96-49.ap-south-1.compute.amazonaws.com
+    - ssh -i "devCircle-secret.pem" ubuntu@ec2-43-204-96-49.ap-south-1.compute.amazonaws.com
     - Install Node version 16.17.0
     - Git clone
     - Frontend
@@ -70,7 +70,7 @@ Body
         - updated DB password
         - allowed ec2 instance public IP on mongodb server
         - npm intsall pm2 -g
-        - pm2 start npm --name "devTinder-backend" -- start
+        - pm2 start npm --name "devCircle-backend" -- start
         - pm2 logs
         - pm2 list, pm2 flush <name> , pm2 stop <name>, pm2 delete <name>
         - config nginx - /etc/nginx/sites-available/default
@@ -84,10 +84,10 @@ Body
         Frontend = http://43.204.96.49/
         Backend = http://43.204.96.49:7777/
 
-        Domain name = devtinder.com => 43.204.96.49
+        Domain name = devCircle.com => 43.204.96.49
 
-        Frontend = devtinder.com
-        Backend = devtinder.com:7777 => devtinder.com/api
+        Frontend = devCircle.com
+        Backend = devCircle.com:7777 => devtinder.com/api
 
         nginx config :
 
@@ -109,7 +109,7 @@ Body
     - signup on cloudflare & add a new domain name
     - change the nameservers on godaddy and point it to cloudflare
     - wait for sometime till your nameservers are updated ~15 minutes
-    - DNS record: A devtinder.in 43.204.96.49
+    - DNS record: A devCircle.in 43.204.96.49
     - Enable SSL for website
 
 
