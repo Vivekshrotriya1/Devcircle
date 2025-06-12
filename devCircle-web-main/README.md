@@ -87,7 +87,7 @@ Body
         Domain name = devCircle.com => 43.204.96.49
 
         Frontend = devCircle.com
-        Backend = devCircle.com:7777 => devtinder.com/api
+        Backend = devCircle.com:7777 => devCircle.com/api
 
         nginx config :
 

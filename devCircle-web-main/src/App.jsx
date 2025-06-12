@@ -9,7 +9,7 @@ import Connections from "./components/Connections";
 import Requests from "./components/Requests";
 import Premium from "./components/Premium";
 import Chat from "./components/Chat";
-
+// start of the code
 function App() {
   return (
     <>
