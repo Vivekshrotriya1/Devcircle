@@ -41,7 +41,7 @@ DevCircle is a modern developer networking platform designed to connect, collabo
 
   * RESTful API endpoints organized in `src/routes`
   * Mongoose models with schema validation and indexing
-  * Environment configuration for easy deployment (Vercel & Heroku)
+  * Environment configuration for easy deployment (Vercel & Render)
 
 ---
 
@@ -54,7 +54,7 @@ DevCircle is a modern developer networking platform designed to connect, collabo
 | Database       | MongoDB • Mongoose          |
 | Real-Time      | Socket.IO                   |
 | Authentication | JSON Web Tokens             |
-| Deployment     | Vercel • Heroku             |
+| Deployment     | Vercel • Render             |
 
 ---
 
