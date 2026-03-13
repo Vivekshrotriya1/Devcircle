@@ -29,3 +29,4 @@ chatRouter.get("/chat/:targetUserId", userAuth, async (req, res) => {
 });
 
 module.exports = chatRouter;
+// this is chats.js
