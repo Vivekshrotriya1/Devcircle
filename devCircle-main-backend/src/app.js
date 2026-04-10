@@ -11,10 +11,7 @@ require("./utils/cronjob");
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://devcircle-neon.vercel.app/"
-    ],
+    origin: true,
     credentials: true,
   })
 );
