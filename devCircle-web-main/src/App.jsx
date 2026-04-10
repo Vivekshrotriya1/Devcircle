@@ -36,7 +36,7 @@ function App() {
       path="/"
       element={<Body darkMode={darkMode} setDarkMode={setDarkMode} />}
     >
-      {/* <Route index element={<Feed />} /> */}
+      <Route index element={<Feed />} />
       <Route path="login" element={<Login />} />
       <Route path="profile" element={<Profile />} />
       <Route path="connections" element={<Connections />} />

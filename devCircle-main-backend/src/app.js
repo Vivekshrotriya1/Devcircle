@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://devcircle-two.vercel.app"
+      "https://devcircle-neon.vercel.app/"
     ],
     credentials: true,
   })
