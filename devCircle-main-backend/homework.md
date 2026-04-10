@@ -32,7 +32,7 @@
  - Difference app.use and app.all
  - Write a dummy auth middleware for admin
  - Write a dummy auth middleware for all user routes, except /user/login
- - Error Handling using app.use("/", (err, req, res, next) = {});
+ - Error Handling using app.use("/", (err, req, res, next) = {});-- write in down
 
  - Create a free cluster on MongoDB official website (Mongo Atlas)
  - Install mongoose library
