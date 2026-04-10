@@ -31,23 +31,21 @@ function App() {
   return (
     <Provider store={appStore}>
       <BrowserRouter basename="/">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Body darkMode={darkMode} setDarkMode={setDarkMode} />
-            }
-          >
-            <Route path="/" element={<Feed />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/connections" element={<Connections />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="/premium" element={<Premium />} />
-            <Route path="/chat/:targetUserId" element={<Chat />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+  <Routes>
+    <Route
+      path="/"
+      element={<Body darkMode={darkMode} setDarkMode={setDarkMode} />}
+    >
+      <Route index element={<Feed />} />
+      <Route path="login" element={<Login />} />
+      <Route path="profile" element={<Profile />} />
+      <Route path="connections" element={<Connections />} />
+      <Route path="requests" element={<Requests />} />
+      <Route path="premium" element={<Premium />} />
+      <Route path="chat/:targetUserId" element={<Chat />} />
+    </Route>
+  </Routes>
+</BrowserRouter>
     </Provider>
   );
 }
