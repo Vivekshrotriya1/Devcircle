@@ -23,13 +23,17 @@ const Login = () => {
         password,
       });
 
-      // 🔥 IMPORTANT: store token manually
-      localStorage.setItem("token", res.data.token);
+      // ✅ SAFE token storage
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      } else {
+        throw new Error("Token not received");
+      }
 
       dispatch(addUser(res.data.user));
       navigate("/");
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      setError(err?.response?.data || err.message || "Something went wrong");
     }
   };
 
@@ -42,13 +46,17 @@ const Login = () => {
         password,
       });
 
-      // 🔥 store token
-      localStorage.setItem("token", res.data.token);
+      // ✅ SAFE token storage
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      } else {
+        throw new Error("Token not received");
+      }
 
       dispatch(addUser(res.data.data));
       navigate("/profile");
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      setError(err?.response?.data || err.message || "Something went wrong");
     }
   };
 

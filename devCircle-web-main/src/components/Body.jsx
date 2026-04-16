@@ -18,32 +18,31 @@ const Body = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // 🔥 If no token → redirect immediately
+      // ✅ If token missing → redirect
       if (!token) {
-        return navigate("/login");
+        navigate("/login");
+        return;
       }
 
       const res = await axios.get(BASE_URL + "/profile/view", {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ send token
+          Authorization: `Bearer ${token}`,
         },
       });
 
       dispatch(addUser(res.data));
     } catch (err) {
-      console.error(err);
+      console.error("Auth error:", err?.response?.data || err.message);
 
-      // 🔥 If token invalid/expired → logout
-      if (err.response && err.response.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-      }
+      // ✅ Token invalid → clear + redirect
+      localStorage.removeItem("token");
+      navigate("/login");
     }
   };
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [userData]); // ✅ added dependency
 
   return (
     <div>
