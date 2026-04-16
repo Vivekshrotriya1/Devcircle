@@ -14,16 +14,30 @@ const Body = () => {
 
   const fetchUser = async () => {
     if (userData) return;
+
     try {
+      const token = localStorage.getItem("token");
+
+      // 🔥 If no token → redirect immediately
+      if (!token) {
+        return navigate("/login");
+      }
+
       const res = await axios.get(BASE_URL + "/profile/view", {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token
+        },
       });
+
       dispatch(addUser(res.data));
     } catch (err) {
+      console.error(err);
+
+      // 🔥 If token invalid/expired → logout
       if (err.response && err.response.status === 401) {
+        localStorage.removeItem("token");
         navigate("/login");
       }
-      console.error(err);
     }
   };
 
@@ -39,4 +53,5 @@ const Body = () => {
     </div>
   );
 };
+
 export default Body;
