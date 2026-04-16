@@ -12,10 +12,11 @@ authRouter.post("/signup", async (req, res) => {
 
     const { firstName, lastName, emailId, password } = req.body;
 
-    // Encrypt password
+    // Encrypt the password
     const passwordHash = await bcrypt.hash(password, 10);
+    console.log(passwordHash);
 
-    // Create user
+    //   Creating a new instance of the User model
     const user = new User({
       firstName,
       lastName,
@@ -24,25 +25,16 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     const savedUser = await user.save();
-
-    // 🔥 Generate token
     const token = await savedUser.getJWT();
 
-    // ✅ OPTIONAL: keep cookie (not needed anymore)
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      sameSite: "none", // required for cross-site cookies
+      secure: true,  // required for cross-site cookies
     });
 
-    // 🔥 IMPORTANT CHANGE (send token)
-    res.json({
-      message: "User Added successfully!",
-      data: savedUser,
-      token, // ✅ THIS FIXES YOUR ISSUE
-    });
-
+    res.json({ message: "User Added successfully!", data: savedUser });
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }
@@ -52,34 +44,25 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    const user = await User.findOne({ emailId });
+    const user = await User.findOne({ emailId: emailId });
     if (!user) {
       throw new Error("Invalid credentials");
     }
-
     const isPasswordValid = await user.validatePassword(password);
 
-    if (!isPasswordValid) {
+    if (isPasswordValid) {
+      const token = await user.getJWT();
+
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      });
+      res.send(user);
+    } else {
       throw new Error("Invalid credentials");
     }
-
-    const token = await user.getJWT();
-
-    // ✅ OPTIONAL: keep cookie (not required anymore)
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 8 * 3600000),
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-    });
-
-    // 🔥 IMPORTANT CHANGE
-    res.json({
-      message: "Login successful",
-      user,
-      token, // ✅ send token to frontend
-    });
-
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }
