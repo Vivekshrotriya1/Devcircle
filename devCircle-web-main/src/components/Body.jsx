@@ -14,35 +14,22 @@ const Body = () => {
 
   const fetchUser = async () => {
     if (userData) return;
-
     try {
-      const token = localStorage.getItem("token");
-
-      // ✅ If token missing → redirect
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       const res = await axios.get(BASE_URL + "/profile/view", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
-
       dispatch(addUser(res.data));
     } catch (err) {
-      console.error("Auth error:", err?.response?.data || err.message);
-
-      // ✅ Token invalid → clear + redirect
-      localStorage.removeItem("token");
-      navigate("/login");
+      if (err.response && err.response.status === 401) {
+        navigate("/login");
+      }
+      console.error(err);
     }
   };
 
   useEffect(() => {
     fetchUser();
-  }, [userData]); // ✅ added dependency
+  }, []);
 
   return (
     <div>
@@ -52,5 +39,4 @@ const Body = () => {
     </div>
   );
 };
-
 export default Body;
