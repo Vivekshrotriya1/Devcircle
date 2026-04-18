@@ -3,6 +3,7 @@ const User = require("../models/user");
 
 const userAuth = async (req, res, next) => {
   try {
+     console.log("Cookies:", req.cookies); // 👈 ADD THIS
     let  token  = req.cookies.token;
 
     // If not in cookies, try Authorization header
