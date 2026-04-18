@@ -1,4 +1,4 @@
-const socket = require("socket.io");
+const { Server } = require("socket.io");
 const crypto = require("crypto");
 const { Chat } = require("../models/chat");
 const ConnectionRequest = require("../models/connectionRequest");
@@ -11,32 +11,33 @@ const getSecretRoomId = (userId, targetUserId) => {
 };
 
 const initializeSocket = (server) => {
-  const io = socket(server, {
+  const io = new Server(server, {
     cors: {
-     origin: [
+      origin: [
         "http://localhost:5173",
-        "https://devcircle-two.vercel.app"
+        "http://localhost:5176",
+        "https://devcircle-neon.vercel.app" // ✅ FIXED
       ],
+      methods: ["GET", "POST"],
       credentials: true,
     },
   });
 
   io.on("connection", (socket) => {
+    console.log("✅ User connected:", socket.id);
+
     socket.on("joinChat", ({ firstName, userId, targetUserId }) => {
       const roomId = getSecretRoomId(userId, targetUserId);
-      console.log(firstName + " joined Room : " + roomId);
+      console.log(`${firstName} joined Room: ${roomId}`);
       socket.join(roomId);
     });
 
     socket.on(
       "sendMessage",
       async ({ firstName, lastName, userId, targetUserId, text }) => {
-        // Save messages to the database
         try {
           const roomId = getSecretRoomId(userId, targetUserId);
-          console.log(firstName + " " + text);
-
-          // TODO: Check if userId & targetUserId are friends
+          console.log(`${firstName}: ${text}`);
 
           let chat = await Chat.findOne({
             participants: { $all: [userId, targetUserId] },
@@ -55,14 +56,21 @@ const initializeSocket = (server) => {
           });
 
           await chat.save();
-          io.to(roomId).emit("messageReceived", { firstName, lastName, text });
+
+          io.to(roomId).emit("messageReceived", {
+            firstName,
+            lastName,
+            text,
+          });
         } catch (err) {
-          console.log(err);
+          console.log("❌ Error:", err);
         }
       }
     );
 
-    socket.on("disconnect", () => {});
+    socket.on("disconnect", () => {
+      console.log("❌ User disconnected:", socket.id);
+    });
   });
 };
 
