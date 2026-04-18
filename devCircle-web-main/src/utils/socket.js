@@ -8,13 +8,19 @@
 //     return io("/", { path: "/api/socket.io" });
 //   }
 // };
-import io from "socket.io-client";
+import { io } from "socket.io-client";
 import { BASE_URL } from "./constants";
 
 export const createSocketConnection = () => {
-  if (location.hostname === "localhost") {
-    return io(BASE_URL, { withCredentials: true });
-  } else {
-    return io("https://devcircle.onrender.com", { withCredentials: true });
-  }
+  const socket = io(
+    location.hostname === "localhost"
+      ? BASE_URL
+      : "https://devcircle.onrender.com",
+    {
+      withCredentials: true,
+      transports: ["websocket", "polling"], // 🔥 important
+    }
+  );
+
+  return socket;
 };
