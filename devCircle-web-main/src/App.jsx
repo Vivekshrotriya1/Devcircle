@@ -17,16 +17,6 @@ function App() {
     localStorage.getItem("theme") === "dark"
   );
 
-  // // ✅ Apply theme to whole app
-  // useEffect(() => {
-  //   if (darkMode) {
-  //     document.documentElement.classList.add("dark");
-  //     localStorage.setItem("theme", "dark");
-  //   } else {
-  //     document.documentElement.classList.remove("dark");
-  //     localStorage.setItem("theme", "light");
-  //   }
-  // }, [darkMode]);
 
   return (
     <Provider store={appStore}>
