@@ -26,37 +26,51 @@ const Connections = () => {
 
   if (!connections) return;
 
-  if (connections.length === 0) return <h1> No Connections Found</h1>;
+  if (connections.length === 0)
+    return (
+      <div className="app-container">
+        <div className="soft-panel mx-auto max-w-xl rounded-lg p-8 text-center">
+          <h1 className="text-2xl font-black text-slate-50">
+            No connections found
+          </h1>
+          <p className="page-subtitle">
+            Accepted builders will appear here when your circle starts growing.
+          </p>
+        </div>
+      </div>
+    );
 
   return (
-    <div className="text-center my-10">
-      <h1 className="text-bold text-white text-3xl">Connections</h1>
+    <div className="app-container">
+      <div className="mb-7 text-center">
+        <h1 className="page-title">Connections</h1>
+        <p className="page-subtitle">
+          People you have matched with and can message anytime.
+        </p>
+      </div>
 
       {connections.map((connection) => {
-        const { _id, firstName, lastName, photoUrl, age, gender, about } =
-          connection;
+        const { _id, firstName, lastName, photoUrl } = connection;
 
         return (
           <div
             key={_id}
-            className="flex m-4 p-4 rounded-lg bg-base-300 w-1/2 mx-auto"
+            className="soft-panel mx-auto mb-4 flex max-w-3xl flex-col gap-4 rounded-lg p-4 sm:flex-row sm:items-center"
           >
-            <div>
+            <div className="shrink-0">
               <img
                 alt="photo"
-                className="w-20 h-20 rounded-full object-cover"
+                className="h-20 w-20 rounded-full object-cover ring-2 ring-cyan-300/50"
                 src={photoUrl}
               />
             </div>
-            <div className="text-left mx-4 ">
-              <h2 className="font-bold text-xl">
+            <div className="min-w-0 flex-1 text-left">
+              <h2 className="text-xl font-black text-slate-50">
                 {firstName + " " + lastName}
               </h2>
-              {age && gender && <p>{age + ", " + gender}</p>}
-              <p>{about}</p>
             </div>
             <Link to={"/chat/" + _id}>
-              <button className="btn btn-primary">Chat</button>
+              <button className="primary-action w-full sm:w-auto">Chat</button>
             </Link>
           </div>
         );

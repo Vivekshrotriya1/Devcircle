@@ -1,7 +1,8 @@
 const Footer = () => {
   return (
-    <footer className="footer bg-base-200 text-neutral-content p-4 fixed bottom-0">
-      <aside className="grid-flow-col items-center">
+    <footer className="mt-8 border-t border-white/10 bg-slate-950/75 px-6 py-5 text-slate-400 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <aside className="flex items-center gap-3">
         <svg
           width="36"
           height="36"
@@ -15,7 +16,7 @@ const Footer = () => {
         </svg>
         <p>Copyright © {new Date().getFullYear()} - All right reserved</p>
       </aside>
-      <nav className="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
+      <nav className="flex gap-4">
         <a>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -50,6 +51,7 @@ const Footer = () => {
           </svg>
         </a>
       </nav>
+      </div>
     </footer>
   );
 };

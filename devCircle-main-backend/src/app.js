@@ -14,6 +14,7 @@ const app = express();
 // ✅ Allowed origins
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "http://localhost:5176",
   "https://devcircle-neon.vercel.app",
 ];
@@ -54,6 +55,8 @@ const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
 const paymentRouter = require("./routes/payment");
 const chatRouter = require("./routes/chat");
+const notificationRouter = require("./routes/notification");
+const Notification = require("./models/notification");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
@@ -61,6 +64,7 @@ app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
 app.use("/", chatRouter);
+app.use("/", notificationRouter);
 
 /* ---------------- SOCKET SERVER ---------------- */
 
@@ -71,7 +75,8 @@ initializeSocket(server);
 /* ---------------- DATABASE + SERVER ---------------- */
 
 connectDB()
-  .then(() => {
+  .then(async () => {
+    await Notification.prepareIndexes();
     console.log("✅ Database connection established...");
 
     const PORT = process.env.PORT || 7777;

@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Body from "./components/Body";
+import Home from "./components/Home";
 import Login from "./components/Login";
+import ForgotPassword from "./components/ForgotPassword";
 import Profile from "./components/Profile";
 import { Provider } from "react-redux";
 import appStore from "./utils/appStore";
@@ -9,7 +11,8 @@ import Connections from "./components/Connections";
 import Requests from "./components/Requests";
 import Premium from "./components/Premium";
 import Chat from "./components/Chat";
-import { useState, useEffect } from "react";
+import Notifications from "./components/Notifications";
+import { useState } from "react";
 
 function App() {
   // ✅ Global dark mode state
@@ -26,11 +29,15 @@ function App() {
       path="/"
       element={<Body darkMode={darkMode} setDarkMode={setDarkMode} />}
     >
-      <Route index element={<Feed />} />
+      <Route index element={<Home />} />
       <Route path="login" element={<Login />} />
+      <Route path="signup" element={<Login />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="feed" element={<Feed />} />
       <Route path="profile" element={<Profile />} />
       <Route path="connections" element={<Connections />} />
       <Route path="requests" element={<Requests />} />
+      <Route path="notifications" element={<Notifications />} />
       <Route path="premium" element={<Premium />} />
       <Route path="chat/:targetUserId" element={<Chat />} />
     </Route>

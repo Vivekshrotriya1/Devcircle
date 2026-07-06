@@ -1,53 +1,38 @@
-const { SendEmailCommand } = require("@aws-sdk/client-ses");
-const { sesClient } = require("./sesClient.js");
+const nodemailer = require("nodemailer");
 
-const createSendEmailCommand = (toAddress, fromAddress, subject, body) => {
-  return new SendEmailCommand({
-    Destination: {
-      CcAddresses: [],
-      ToAddresses: [toAddress],
+const isEmailConfigured = () =>
+  Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+
+const createTransporter = () =>
+  nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
-    Message: {
-      Body: {
-        Html: {
-          Charset: "UTF-8",
-          Data: `<h1>${body}</h1>`,
-        },
-        Text: {
-          Charset: "UTF-8",
-          Data: "This is the text format email",
-        },
-      },
-      Subject: {
-        Charset: "UTF-8",
-        Data: subject,
-      },
-    },
-    Source: fromAddress,
-    ReplyToAddresses: [
-      /* more items */
-    ],
+  });
+
+const run = async (subject, body, toEmailId) => {
+  if (!isEmailConfigured()) {
+    console.log(
+      "Email sending skipped. Add EMAIL_USER and EMAIL_PASS to send real emails."
+    );
+    console.log(`Email to: ${toEmailId}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body: ${body}`);
+
+    return { skipped: true, reason: "Email credentials are not configured" };
+  }
+
+  const transporter = createTransporter();
+
+  return transporter.sendMail({
+    from: `"DevCircle" <${process.env.EMAIL_USER}>`,
+    to: toEmailId,
+    subject,
+    text: body,
+    html: `<h2>${body}</h2>`,
   });
 };
 
-const run = async (subject, body, toEmailId) => {
-  const sendEmailCommand = createSendEmailCommand(
-    "akshaysaini.in@gmail.com",
-    "akshay@devtinder.in",
-    subject,
-    body
-  );
-
-  try {
-    return await sesClient.send(sendEmailCommand);
-  } catch (caught) {
-    if (caught instanceof Error && caught.name === "MessageRejected") {
-      const messageRejectedError = caught;
-      return messageRejectedError;
-    }
-    throw caught;
-  }
-};
-
-// snippet-end:[ses.JavaScript.email.sendEmailV3]
 module.exports = { run };

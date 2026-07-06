@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { removeUserFromFeed } from "../utils/feedSlice";
 
 const UserCard = ({ user }) => {
-  const { _id, firstName, lastName, photoUrl, age, gender, about } = user;
+  const { _id, firstName, lastName, photoUrl, age, gender, city, about } = user;
   const dispatch = useDispatch();
 
   const handleSendRequest = async (status, userId) => {
@@ -19,23 +19,43 @@ const UserCard = ({ user }) => {
   };
 
   return (
-    <div className="card bg-base-300 w-96 shadow-xl">
-      <figure>
-        <img src={user.photoUrl} alt="photo" />
+    <div className="surface-card w-full max-w-sm overflow-hidden rounded-lg">
+      <figure className="relative bg-slate-900">
+        <img
+          src={photoUrl}
+          alt="photo"
+          className="h-[25rem] w-full object-cover object-center"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950 to-transparent" />
       </figure>
-      <div className="card-body">
-        <h2 className="card-title">{firstName + " " + lastName}</h2>
-        {age && gender && <p>{age + ", " + gender}</p>}
-        <p>{about}</p>
-        <div className="card-actions justify-center my-4">
+      <div className="space-y-4 p-6">
+        <div>
+          <h2 className="text-2xl font-black text-slate-50">
+            {firstName + " " + lastName}
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {age && gender && (
+              <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-sm font-semibold text-cyan-100">
+                {age + ", " + gender}
+              </span>
+            )}
+            {city && (
+              <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10 px-3 py-1 text-sm font-semibold text-fuchsia-100">
+                {city}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="leading-6 text-slate-300">{about}</p>
+        <div className="grid grid-cols-2 gap-3 pt-2">
           <button
-            className="btn btn-primary"
+            className="secondary-action"
             onClick={() => handleSendRequest("ignored", _id)}
           >
             Ignore
           </button>
           <button
-            className="btn btn-secondary"
+            className="primary-action"
             onClick={() => handleSendRequest("interested", _id)}
           >
             Interested

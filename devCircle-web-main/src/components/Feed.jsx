@@ -2,15 +2,18 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import { addFeed } from "../utils/feedSlice";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import UserCard from "./UserCard";
 
 const Feed = () => {
   const feed = useSelector((store) => store.feed);
   const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const getFeed = async () => {
-    if (feed && feed.length > 0) return;
+  const getFeed = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh && feed && feed.length > 0) return;
 
     try {
       const res = await axios.get(BASE_URL + "/feed", {
@@ -22,22 +25,45 @@ const Feed = () => {
       console.log(err?.response?.data);
 
       if (err.response?.status === 401) {
-        window.location.href = "/login";
+        if (sessionStorage.getItem("devcircleLoggingOut") === "true") {
+          navigate("/");
+          return;
+        }
+
+        navigate("/login");
       }
     }
-  };
+  }, [dispatch, feed, navigate]);
 
   useEffect(() => {
-    getFeed();
-  }, []);
+    getFeed(Boolean(location.state?.refreshFeedAt));
+  }, [getFeed, location.state?.refreshFeedAt]);
 
-  if (!feed) return <h1 className="text-center mt-10">Loading...</h1>;
+  if (!feed)
+    return (
+      <div className="app-container flex justify-center">
+        <div className="soft-panel rounded-lg px-6 py-4 font-semibold text-slate-300">
+          Loading...
+        </div>
+      </div>
+    );
 
   if (feed.length === 0)
-    return <h1 className="flex justify-center my-10">No new users found!</h1>;
+    return (
+      <div className="app-container">
+        <div className="soft-panel mx-auto max-w-xl rounded-lg p-8 text-center">
+          <h1 className="text-2xl font-black text-slate-50">
+            No new users found
+          </h1>
+          <p className="page-subtitle">
+            Your circle is caught up for now. Check back later for fresh builders.
+          </p>
+        </div>
+      </div>
+    );
 
   return (
-    <div className="flex justify-center my-10">
+    <div className="app-container flex justify-center">
       <UserCard user={feed[0]} />
     </div>
   );

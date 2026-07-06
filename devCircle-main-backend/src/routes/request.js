@@ -4,6 +4,7 @@ const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
+const { createNotification } = require("../utils/notificationService");
 
 const sendEmail = require("../utils/sendEmail");
 
@@ -47,6 +48,18 @@ requestRouter.post(
       });
 
       const data = await connectionRequest.save();
+
+      if (status === "interested") {
+        await createNotification({
+          receiverId: toUserId,
+          senderId: fromUserId,
+          type: "connection_request",
+          title: `${req.user.firstName} sent you a request`,
+          message: `${req.user.firstName} wants to connect with you.`,
+          actionUrl: "/requests",
+          dedupeKey: `connection_request:${data._id}`,
+        });
+      }
 
       // const emailRes = await sendEmail.run(
       //   "A new friend request from " + req.user.firstName,
@@ -92,6 +105,18 @@ requestRouter.post(
       connectionRequest.status = status;
 
       const data = await connectionRequest.save();
+
+      if (status === "accepted") {
+        await createNotification({
+          receiverId: connectionRequest.fromUserId,
+          senderId: loggedInUser._id,
+          type: "request_accepted",
+          title: `${loggedInUser.firstName} accepted your request`,
+          message: `You and ${loggedInUser.firstName} are now connected.`,
+          actionUrl: "/connections",
+          dedupeKey: `request_accepted:${connectionRequest._id}`,
+        });
+      }
 
       res.json({ message: "Connection request " + status, data });
     } catch (err) {

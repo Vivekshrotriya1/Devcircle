@@ -51,19 +51,31 @@ const userSchema = new mongoose.Schema(
       //   }
       // },
     },
+    city: {
+      type: String,
+      trim: true,
+    },
     isPremium: {
       type: Boolean,
       default: false,
     },
     membershipType: {
       type: String,
+      enum: ["silver", "gold"],
+    },
+    membershipExpiresAt: {
+      type: Date,
     },
     photoUrl: {
       type: String,
       default: "https://geographyandyou.com/images/user-profile.png",
       validate(value) {
-        if (!validator.isURL(value)) {
-          throw new Error("Invalid Photo URL: " + value);
+        const isImageDataUrl = /^data:image\/(png|jpeg|jpg|webp);base64,/.test(
+          value
+        );
+
+        if (!validator.isURL(value) && !isImageDataUrl) {
+          throw new Error("Invalid Photo: " + value);
         }
       },
     },

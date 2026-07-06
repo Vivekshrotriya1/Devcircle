@@ -1,102 +1,157 @@
 import axios from "axios";
+import { Bell, Code2 } from "lucide-react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
+import { clearFeed } from "../utils/feedSlice";
+import {
+  clearNotifications,
+  setNotifications,
+  upsertNotification,
+} from "../utils/notificationSlice";
+import { createSocketConnection } from "../utils/socket";
 import { removeUser } from "../utils/userSlice";
-import { Bell, Sun, Moon } from "lucide-react";
-import { useState } from "react";
-
-
 
 const NavBar = () => {
   const user = useSelector((store) => store.user);
+  const notifications = useSelector((store) => store.notifications);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
+  const unreadNotificationCount = notifications.filter(
+    (notification) => !notification?.isRead
+  ).length;
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get(BASE_URL + "/notifications", {
+          withCredentials: true,
+        });
+
+        dispatch(setNotifications(res.data.data));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchNotifications();
+
+    const socket = createSocketConnection();
+    socket.on("notificationReceived", (notification) => {
+      dispatch(upsertNotification(notification));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [dispatch, user]);
 
   const handleLogout = async () => {
     try {
+      sessionStorage.setItem("devcircleLoggingOut", "true");
       await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
+      dispatch(clearNotifications());
+      dispatch(clearFeed());
       dispatch(removeUser());
-      navigate("/login");
+      window.location.replace("/");
     } catch (err) {
       console.log(err);
+      window.location.replace("/");
     }
   };
 
-  return (
-    <div className="navbar bg-base-300 px-6 shadow-md sticky top-0 z-50">
+  const handleLogoClick = (e) => {
+    if (!user) return;
 
-      {/* Logo */}
+    e.preventDefault();
+    dispatch(clearFeed());
+    navigate("/feed", { state: { refreshFeedAt: Date.now() } });
+  };
+
+  const handleFeedClick = (e) => {
+    e.preventDefault();
+    dispatch(clearFeed());
+    navigate("/feed", { state: { refreshFeedAt: Date.now() } });
+  };
+
+  return (
+    <div className="navbar sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 px-4 shadow-xl shadow-black/20 backdrop-blur-xl sm:px-6">
       <div className="flex-1">
         <Link
           to="/"
-          className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
+          onClick={handleLogoClick}
+          className="flex items-center gap-3 text-2xl font-black text-white"
         >
-          👩‍💻 DevCircle
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-fuchsia-500 text-slate-950 shadow-lg shadow-cyan-950/30">
+            <Code2 size={22} strokeWidth={3} />
+          </span>
+          <span className="bg-gradient-to-r from-cyan-200 to-fuchsia-200 bg-clip-text text-transparent">
+            DevCircle
+          </span>
         </Link>
       </div>
 
       {user && (
         <div className="flex items-center gap-4">
-
-          {/* Dark Mode Toggle */}
-          {/* <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="btn btn-ghost btn-circle"
+          <Link
+            to="/notifications"
+            className="btn btn-ghost btn-circle relative text-slate-200 hover:bg-white/10"
+            aria-label="Notifications"
           >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button> */}
-
-          {/* Notification Icon */}
-          {/* <div className="relative cursor-pointer">
             <Bell size={22} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full px-1">
-              3
-            </span>
-          </div> */}
+            {unreadNotificationCount > 0 && (
+              <span className="badge badge-error badge-sm absolute -right-1 -top-1 min-w-5 border-none px-1 text-white">
+                {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+              </span>
+            )}
+          </Link>
 
-          {/* Welcome Text */}
-          <div className="hidden md:block font-medium">
-            Welcome, <span className="text-primary">{user.firstName}</span>
+          <div className="hidden rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-slate-300 md:block">
+            Welcome, <span className="text-cyan-200">{user.firstName}</span>
           </div>
 
-          {/* Avatar Dropdown */}
           <div className="dropdown dropdown-end">
             <div
               tabIndex={0}
               role="button"
-              className="relative btn btn-ghost btn-circle avatar"
+              className="relative btn btn-ghost btn-circle avatar hover:bg-white/10"
             >
-              <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+              <div className="w-10 rounded-full ring-2 ring-cyan-300/80 ring-offset-2 ring-offset-slate-950">
                 <img alt="user" src={user.photoUrl} />
               </div>
-
-              {/* Online Indicator */}
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400"></span>
             </div>
 
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content bg-base-100 rounded-xl z-[1] mt-3 w-56 p-3 shadow-lg"
+              className="menu menu-sm dropdown-content surface-card z-[1] mt-3 w-60 rounded-lg p-3 text-slate-100"
             >
-              <li className="font-semibold text-lg px-2">
-                {user.firstName}
-              </li>
+              <li className="px-2 text-lg font-bold">{user.firstName}</li>
 
               <div className="divider my-1"></div>
 
               <li>
-                <Link to="/profile">👤 Profile</Link>
+                <Link to="/profile">Profile</Link>
               </li>
               <li>
-                <Link to="/connections">🤝 Connections</Link>
+                <Link to="/feed" onClick={handleFeedClick}>
+                  Feed
+                </Link>
               </li>
               <li>
-                <Link to="/requests">📩 Requests</Link>
+                <Link to="/connections">Connections</Link>
               </li>
               <li>
-                <Link to="/premium">💎 Premium</Link>
+                <Link to="/requests">Requests</Link>
+              </li>
+              <li>
+                <Link to="/notifications">Notifications</Link>
+              </li>
+              <li>
+                <Link to="/premium">Premium</Link>
               </li>
 
               <div className="divider my-1"></div>
@@ -106,7 +161,7 @@ const NavBar = () => {
                   onClick={handleLogout}
                   className="text-red-500 font-semibold"
                 >
-                  🚪 Logout
+                  Logout
                 </button>
               </li>
             </ul>
