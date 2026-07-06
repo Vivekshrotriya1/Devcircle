@@ -4,16 +4,27 @@ const getEnv = (key) => (process.env[key] || "").trim();
 
 const getGmailAppPassword = () => getEnv("EMAIL_PASS").replace(/\s/g, "");
 
+const getEmailMode = () => (getEnv("SMTP_HOST") ? "smtp" : "gmail");
+
+const getEmailHost = () => getEnv("SMTP_HOST") || "smtp.gmail.com";
+
+const getEmailPort = () =>
+  getEnv("SMTP_HOST")
+    ? Number(getEnv("SMTP_PORT") || 587)
+    : Number(getEnv("EMAIL_PORT") || 587);
+
 const buildEmailErrorMessage = (err) => {
   if (err.code === "EAUTH" || err.responseCode === 535) {
-    return "Gmail rejected EMAIL_USER or EMAIL_PASS. Use a fresh 16-character Gmail App Password from the same Gmail account, then redeploy Render.";
+    return getEmailMode() === "smtp"
+      ? "SMTP provider rejected SMTP_USER or SMTP_PASS. Please check the Brevo SMTP login and SMTP key on Render."
+      : "Gmail rejected EMAIL_USER or EMAIL_PASS. Use a fresh 16-character Gmail App Password from the same Gmail account, then redeploy Render.";
   }
 
   if (["ECONNECTION", "ETIMEDOUT", "ESOCKET"].includes(err.code)) {
-    return "Server could not connect to Gmail SMTP. Try EMAIL_PORT=465 or use a production SMTP provider like Brevo, SendGrid, Mailgun, or Amazon SES.";
+    return `Server could not connect to ${getEmailHost()}:${getEmailPort()}. Please check SMTP env values on Render and redeploy.`;
   }
 
-  return "Unable to send email. Please check the email settings on Render and see the Render logs for the Gmail response.";
+  return "Unable to send email. Please check the email settings on Render and see the Render logs for the provider response.";
 };
 
 const isEmailConfigured = () =>
@@ -34,7 +45,7 @@ const createTransporter = () => {
   if (getEnv("SMTP_HOST")) {
     return nodemailer.createTransport({
       host: getEnv("SMTP_HOST"),
-      port: Number(getEnv("SMTP_PORT") || 587),
+      port: getEmailPort(),
       secure: getEnv("SMTP_SECURE") === "true",
       auth: {
         user: getEnv("SMTP_USER"),
@@ -45,7 +56,7 @@ const createTransporter = () => {
     });
   }
 
-  const emailPort = Number(getEnv("EMAIL_PORT") || 587);
+  const emailPort = getEmailPort();
 
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -123,7 +134,9 @@ const run = async (subject, body, toEmailId) => {
     }
 
     console.error("Email delivery failed:", {
-      attemptedPort: getEnv("SMTP_PORT") || getEnv("EMAIL_PORT") || 587,
+      mode: getEmailMode(),
+      attemptedHost: getEmailHost(),
+      attemptedPort: getEmailPort(),
       code: err.code,
       command: err.command,
       response: err.response,
