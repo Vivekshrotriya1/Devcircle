@@ -14,6 +14,10 @@ const getEmailPort = () =>
     : Number(getEnv("EMAIL_PORT") || 587);
 
 const buildEmailErrorMessage = (err) => {
+  if (err.responseCode === 525 || /Unauthorized IP address/i.test(err.response || "")) {
+    return "Brevo rejected this Render server IP address. In Brevo, disable Authorized IP restriction for SMTP/API or create an SMTP key without IP restrictions.";
+  }
+
   if (err.code === "EAUTH" || err.responseCode === 535) {
     return getEmailMode() === "smtp"
       ? "SMTP provider rejected SMTP_USER or SMTP_PASS. Please check the Brevo SMTP login and SMTP key on Render."

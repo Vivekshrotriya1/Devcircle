@@ -4,6 +4,7 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import { CheckCircle2 } from "lucide-react";
 
 const EditProfile = ({ user }) => {
   const [firstName, setFirstName] = useState(user.firstName);
@@ -177,8 +178,9 @@ const EditProfile = ({ user }) => {
         </div>
       </div>
       {showToast && (
-        <div className="toast toast-top toast-center">
-          <div className="alert border border-emerald-300/30 bg-emerald-400 text-slate-950 shadow-xl">
+        <div className="fixed left-1/2 top-20 z-[100] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2">
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-emerald-300/30 bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-black/40">
+            <CheckCircle2 size={18} strokeWidth={3} />
             <span>Profile saved successfully.</span>
           </div>
         </div>
