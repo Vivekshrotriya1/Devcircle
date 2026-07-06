@@ -4,6 +4,18 @@ const getEnv = (key) => (process.env[key] || "").trim();
 
 const getGmailAppPassword = () => getEnv("EMAIL_PASS").replace(/\s/g, "");
 
+const buildEmailErrorMessage = (err) => {
+  if (err.code === "EAUTH" || err.responseCode === 535) {
+    return "Gmail rejected EMAIL_USER or EMAIL_PASS. Use a fresh 16-character Gmail App Password from the same Gmail account, then redeploy Render.";
+  }
+
+  if (["ECONNECTION", "ETIMEDOUT", "ESOCKET"].includes(err.code)) {
+    return "Server could not connect to Gmail SMTP. Try setting EMAIL_PORT=587 on Render and redeploy.";
+  }
+
+  return "Unable to send email. Please check the email settings on Render and see the Render logs for the Gmail response.";
+};
+
 const isEmailConfigured = () =>
   Boolean(
     (getEnv("EMAIL_USER") && getGmailAppPassword()) ||
@@ -33,8 +45,9 @@ const createTransporter = () => {
 
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    port: Number(getEnv("EMAIL_PORT") || 587),
+    secure: getEnv("EMAIL_PORT") === "465",
+    requireTLS: true,
     auth: {
       user: getEnv("EMAIL_USER"),
       pass: getGmailAppPassword(),
@@ -81,7 +94,7 @@ const run = async (subject, body, toEmailId) => {
     });
 
     throw new EmailDeliveryError(
-      "Unable to send email. Please check EMAIL_USER and EMAIL_PASS on Render. If you use Gmail, EMAIL_PASS must be a 16-character App Password, not your Gmail login password.",
+      buildEmailErrorMessage(err),
       err
     );
   }
