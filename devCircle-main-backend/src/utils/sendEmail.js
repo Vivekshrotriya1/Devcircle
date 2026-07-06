@@ -1,9 +1,13 @@
 const nodemailer = require("nodemailer");
 
+const getEnv = (key) => (process.env[key] || "").trim();
+
+const getGmailAppPassword = () => getEnv("EMAIL_PASS").replace(/\s/g, "");
+
 const isEmailConfigured = () =>
   Boolean(
-    (process.env.EMAIL_USER && process.env.EMAIL_PASS) ||
-      (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+    (getEnv("EMAIL_USER") && getGmailAppPassword()) ||
+      (getEnv("SMTP_HOST") && getEnv("SMTP_USER") && getEnv("SMTP_PASS"))
   );
 
 class EmailDeliveryError extends Error {
@@ -15,23 +19,25 @@ class EmailDeliveryError extends Error {
 }
 
 const createTransporter = () => {
-  if (process.env.SMTP_HOST) {
+  if (getEnv("SMTP_HOST")) {
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true",
+      host: getEnv("SMTP_HOST"),
+      port: Number(getEnv("SMTP_PORT") || 587),
+      secure: getEnv("SMTP_SECURE") === "true",
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: getEnv("SMTP_USER"),
+        pass: getEnv("SMTP_PASS"),
       },
     });
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: getEnv("EMAIL_USER"),
+      pass: getGmailAppPassword(),
     },
   });
 };
@@ -59,7 +65,7 @@ const run = async (subject, body, toEmailId) => {
   try {
     return await transporter.sendMail({
       from: `"DevCircle" <${
-        process.env.EMAIL_FROM || process.env.EMAIL_USER || process.env.SMTP_USER
+        getEnv("EMAIL_FROM") || getEnv("EMAIL_USER") || getEnv("SMTP_USER")
       }>`,
       to: toEmailId,
       subject,
@@ -67,8 +73,15 @@ const run = async (subject, body, toEmailId) => {
       html: `<h2>${body}</h2>`,
     });
   } catch (err) {
+    console.error("Email delivery failed:", {
+      code: err.code,
+      command: err.command,
+      response: err.response,
+      responseCode: err.responseCode,
+    });
+
     throw new EmailDeliveryError(
-      "Unable to send email. Please check the email credentials configured on the server.",
+      "Unable to send email. Please check EMAIL_USER and EMAIL_PASS on Render. If you use Gmail, EMAIL_PASS must be a 16-character App Password, not your Gmail login password.",
       err
     );
   }
