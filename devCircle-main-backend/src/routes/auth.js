@@ -6,39 +6,77 @@ const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const sendEmail = require("../utils/sendEmail");
+const OtpVerification = require("../models/otpVerification");
 
-const signupOtpStore = new Map();
-const passwordResetOtpStore = new Map();
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
+const MAX_OTP_ATTEMPTS = 5;
+const OTP_PURPOSE = {
+  SIGNUP: "signup",
+  PASSWORD_RESET: "passwordReset",
+};
 
 const normalizeEmail = (emailId = "") => emailId.trim().toLowerCase();
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-const getSignupOtpRecord = (emailId) => {
-  const record = signupOtpStore.get(emailId);
+const createOtpRecord = async (emailId, purpose, otpHash) => {
+  return OtpVerification.findOneAndUpdate(
+    { emailId, purpose },
+    {
+      otpHash,
+      expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
+      verified: false,
+      attempts: 0,
+    },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+};
 
+const getOtpRecord = async (emailId, purpose) => {
+  const record = await OtpVerification.findOne({ emailId, purpose });
   if (!record) return null;
 
-  if (record.expiresAt < Date.now()) {
-    signupOtpStore.delete(emailId);
+  if (record.expiresAt.getTime() < Date.now()) {
+    await OtpVerification.deleteOne({ _id: record._id });
     return null;
   }
 
   return record;
 };
 
-const getPasswordResetOtpRecord = (emailId) => {
-  const record = passwordResetOtpStore.get(emailId);
+const deleteOtpRecord = (emailId, purpose) =>
+  OtpVerification.deleteOne({ emailId, purpose });
 
-  if (!record) return null;
-
-  if (record.expiresAt < Date.now()) {
-    passwordResetOtpStore.delete(emailId);
-    return null;
+const verifyOtpRecord = async (emailId, purpose, otp) => {
+  const record = await getOtpRecord(emailId, purpose);
+  if (!record) {
+    throw new Error("OTP has expired. Please request a new OTP.");
   }
 
-  return record;
+  if (record.attempts >= MAX_OTP_ATTEMPTS) {
+    await deleteOtpRecord(emailId, purpose);
+    throw new Error("Too many incorrect attempts. Please request a new OTP.");
+  }
+
+  const isOtpValid = await bcrypt.compare(otp, record.otpHash);
+  if (!isOtpValid) {
+    record.attempts += 1;
+    await record.save();
+    throw new Error("Invalid OTP!");
+  }
+
+  record.verified = true;
+  await record.save();
+};
+
+const sendOtpEmail = async ({ emailId, purpose, subject, body }) => {
+  const otp = generateOtp();
+  const otpHash = await bcrypt.hash(otp, 10);
+  const emailResult = await sendEmail.run(subject, body(otp), emailId);
+
+  await createOtpRecord(emailId, purpose, otpHash);
+
+  return { emailResult, otp };
 };
 
 authRouter.post("/signup/send-otp", async (req, res) => {
@@ -54,21 +92,13 @@ authRouter.post("/signup/send-otp", async (req, res) => {
       throw new Error("Email is already registered!");
     }
 
-    const otp = generateOtp();
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    signupOtpStore.set(emailId, {
-      otpHash,
-      expiresAt: Date.now() + OTP_EXPIRY_MS,
-      verified: false,
-      attempts: 0,
+    const { emailResult, otp } = await sendOtpEmail({
+      emailId,
+      purpose: OTP_PURPOSE.SIGNUP,
+      subject: "Your DevCircle signup OTP",
+      body: (otp) =>
+        `Your DevCircle signup OTP is ${otp}. It will expire in 10 minutes.`,
     });
-
-    const emailResult = await sendEmail.run(
-      "Your DevCircle signup OTP",
-      `Your DevCircle signup OTP is ${otp}. It will expire in 10 minutes.`,
-      emailId
-    );
 
     res.send({
       message: emailResult?.skipped
@@ -78,7 +108,7 @@ authRouter.post("/signup/send-otp", async (req, res) => {
     });
   } catch (err) {
     console.error("Send signup OTP failed:", err);
-    res.status(400).send("ERROR : Unable to send OTP. Please try again later.");
+    res.status(400).send("ERROR : " + err.message);
   }
 });
 
@@ -95,23 +125,7 @@ authRouter.post("/signup/verify-otp", async (req, res) => {
       throw new Error("Please enter a valid 6 digit OTP!");
     }
 
-    const record = getSignupOtpRecord(emailId);
-    if (!record) {
-      throw new Error("OTP has expired. Please request a new OTP.");
-    }
-
-    if (record.attempts >= 5) {
-      signupOtpStore.delete(emailId);
-      throw new Error("Too many incorrect attempts. Please request a new OTP.");
-    }
-
-    const isOtpValid = await bcrypt.compare(otp, record.otpHash);
-    if (!isOtpValid) {
-      record.attempts += 1;
-      throw new Error("Invalid OTP!");
-    }
-
-    record.verified = true;
+    await verifyOtpRecord(emailId, OTP_PURPOSE.SIGNUP, otp);
     res.send({ message: "Email verified successfully!" });
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
@@ -125,7 +139,7 @@ authRouter.post("/signup", async (req, res) => {
 
     const { firstName, lastName, password } = req.body;
     const emailId = normalizeEmail(req.body.emailId);
-    const otpRecord = getSignupOtpRecord(emailId);
+    const otpRecord = await getOtpRecord(emailId, OTP_PURPOSE.SIGNUP);
 
     if (!otpRecord?.verified) {
       throw new Error("Please verify your email OTP before signing up!");
@@ -143,7 +157,7 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     const savedUser = await user.save();
-    signupOtpStore.delete(emailId);
+    await deleteOtpRecord(emailId, OTP_PURPOSE.SIGNUP);
     const token = await savedUser.getJWT();
 
     res.cookie("token", token, {
@@ -172,21 +186,13 @@ authRouter.post("/forgot-password/send-otp", async (req, res) => {
       throw new Error("No account found with this email!");
     }
 
-    const otp = generateOtp();
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    passwordResetOtpStore.set(emailId, {
-      otpHash,
-      expiresAt: Date.now() + OTP_EXPIRY_MS,
-      verified: false,
-      attempts: 0,
+    const { emailResult, otp } = await sendOtpEmail({
+      emailId,
+      purpose: OTP_PURPOSE.PASSWORD_RESET,
+      subject: "Your DevCircle password reset OTP",
+      body: (otp) =>
+        `Your DevCircle password reset OTP is ${otp}. It will expire in 10 minutes.`,
     });
-
-    const emailResult = await sendEmail.run(
-      "Your DevCircle password reset OTP",
-      `Your DevCircle password reset OTP is ${otp}. It will expire in 10 minutes.`,
-      emailId
-    );
 
     res.send({
       message: emailResult?.skipped
@@ -212,23 +218,7 @@ authRouter.post("/forgot-password/verify-otp", async (req, res) => {
       throw new Error("Please enter a valid 6 digit OTP!");
     }
 
-    const record = getPasswordResetOtpRecord(emailId);
-    if (!record) {
-      throw new Error("OTP has expired. Please request a new OTP.");
-    }
-
-    if (record.attempts >= 5) {
-      passwordResetOtpStore.delete(emailId);
-      throw new Error("Too many incorrect attempts. Please request a new OTP.");
-    }
-
-    const isOtpValid = await bcrypt.compare(otp, record.otpHash);
-    if (!isOtpValid) {
-      record.attempts += 1;
-      throw new Error("Invalid OTP!");
-    }
-
-    record.verified = true;
+    await verifyOtpRecord(emailId, OTP_PURPOSE.PASSWORD_RESET, otp);
     res.send({ message: "OTP verified successfully!" });
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
@@ -248,7 +238,7 @@ authRouter.post("/forgot-password/reset", async (req, res) => {
       throw new Error("Please enter a strong Password!");
     }
 
-    const record = getPasswordResetOtpRecord(emailId);
+    const record = await getOtpRecord(emailId, OTP_PURPOSE.PASSWORD_RESET);
     if (!record?.verified) {
       throw new Error("Please verify your OTP before resetting password!");
     }
@@ -260,7 +250,7 @@ authRouter.post("/forgot-password/reset", async (req, res) => {
 
     user.password = await bcrypt.hash(password, 10);
     await user.save();
-    passwordResetOtpStore.delete(emailId);
+    await deleteOtpRecord(emailId, OTP_PURPOSE.PASSWORD_RESET);
 
     res.send({ message: "Password reset successfully!" });
   } catch (err) {
